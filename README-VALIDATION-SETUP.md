@@ -1,18 +1,24 @@
-# Validation setup (separate deployment)
+# Validation deployment setup
 
-The repository client is static and leaves `VALIDATION_ENDPOINT` as a placeholder. It calculates results locally but sends no records. `Code.gs` is a receiver template with `SPREADSHEET_ID` unset. The deployed public site may have separate private configuration.
+The diagnostic remains client-side. Optional validation submissions follow this route:
 
-1. Create a Google Spreadsheet for validation. Limit its access to authorized researchers.
-2. In the spreadsheet, open **Extensions → Apps Script** and paste `Code.gs`.
-3. For a script bound to that spreadsheet, leave the `SPREADSHEET_ID` placeholder. For a standalone script, set the target Spreadsheet ID in your private copy only.
-4. Save, then choose **Deploy → New deployment → Web app**. To accept external anonymous submissions, use **Execute as: Me** and **Who has access: Anyone**, if permitted by your Google Workspace policy. Authorize the script. Copy the `/exec` URL.
-5. Set `VALIDATION_ENDPOINT` in a private deployment copy of `index.html` to that URL. Do not commit the configured copy or the Spreadsheet ID. Host the HTML on HTTPS static hosting.
-6. Complete a synthetic test with validation contribution checked. Verify one completed row in `SESSIONS` and milestones in `EVENTS`; optionally submit feedback and contact to check `FEEDBACK` and `CONTACTS`.
-7. Repeat without contribution consent. No `SESSION` or `EVENT` request should be sent. Optional feedback and contact are independent submissions. In `CONTACTS`, `feedback_session_id` must be blank unless testimonial **contact** permission is checked. Publication permission is never inferred.
-8. Clear `VALIDATION_ENDPOINT` to disable all validation transmissions. The diagnostic continues to work.
+Browser → `/api/validation` → Netlify Function → Google Apps Script Web App → Google Sheets.
 
-The receiver validates field sets and values, creates exact headers for `SESSIONS`, `EVENTS`, `FEEDBACK`, and `CONTACTS`, uses a lock, and ignores duplicate primary IDs. The client sends `text/plain` JSON envelopes with `mode: 'no-cors'`; it cannot read an acknowledgement. A resolved browser request is therefore not proof that the server accepted the record. Inspect the sheets during setup.
+The Apps Script `/exec` URL belongs only in the Netlify environment variable `ARWT_VALIDATION_ENDPOINT`. It must not be placed in `index.html`, `netlify.toml`, GitHub, or a public build setting. The function forwards the same `ARWT_VALIDATION_V1` JSON envelope as `text/plain;charset=utf-8`; `Code.gs` remains the receiver and defines the four sheet schemas.
 
-**Operational risk:** An Apps Script Web App open to Anyone has no participant authentication in this design. Anyone who discovers its URL could submit syntactically valid junk records. Validation and deduplication do not prevent that. Protect the sheet, monitor submissions, and do not use these records as verified evidence without review. An authorization/rate-limiting layer would require a separate design decision and is outside this frozen validation build.
+## Existing ARWT deployment
 
-The validation build transmits research data when a participant opts in, and optional feedback/contact when separately submitted. The uninstrumented reference rc5.1 build does not transmit validation records.
+1. In Netlify, open the existing ARWT site, then **Project configuration → Environment variables**. Add `ARWT_VALIDATION_ENDPOINT` with the existing Google Apps Script Web App **`/exec` URL** as its value. Give it the **Functions** scope (or all scopes where a separate scope is unavailable) and the production deployment context. Do not put the value in GitHub or a client-side variable.
+2. Deploy the repository's production branch. `netlify.toml` maps `/api/validation` to `netlify/functions/validation.mjs`; no build tooling or dependencies are required. Redeploy after adding or changing the environment variable.
+3. Use synthetic inputs with **Contribute my responses to ARWT validation** checked. Confirm a completed row in `SESSIONS` and milestone rows in `EVENTS`. Optional feedback and contact can be checked separately in `FEEDBACK` and `CONTACTS`.
+4. Repeat without contribution consent. No `SESSION` or `EVENT` request should be made. Feedback and contact remain independent. In `CONTACTS`, `feedback_session_id` must be blank unless testimonial **contact** consent is checked.
+
+If the variable is missing, the function returns a configuration error and the diagnostic result remains visible. Validation data cannot reach Google Sheets until the variable is configured and the site is redeployed.
+
+## New independent deployment
+
+Create a Google Spreadsheet and limit access to authorized researchers. In **Extensions → Apps Script**, paste `Code.gs`. For a bound script, leave `SPREADSHEET_ID` as its placeholder; for a standalone script, set the ID only in your private Apps Script copy. Deploy as a Web App with **Execute as: Me** and **Who has access: Anyone** if your Workspace policy permits external submissions. Copy its `/exec` URL into the private Netlify variable above. Never publish a real Spreadsheet ID or URL in this repository.
+
+The receiver validates records, creates exact headers for `SESSIONS`, `EVENTS`, `FEEDBACK`, and `CONTACTS`, locks writes, and ignores duplicate IDs. It returns JSON acknowledgements; the proxy reports success only after Apps Script acknowledges acceptance. Inspect the sheet to verify the final write. The Web App and proxy accept anonymous submissions, so syntactically valid junk remains possible; review validation data before treating it as evidence.
+
+Removing `ARWT_VALIDATION_ENDPOINT` and redeploying stops forwarding to Apps Script. The browser still attempts optional submissions to the Netlify Function, which returns a configuration error; the assessment remains usable. The uninstrumented reference rc5.1 build has no validation transmission.

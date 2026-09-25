@@ -811,7 +811,7 @@
     const SCHEMA_VERSION = 'ARWT_VALIDATION_V1';
     const METHODOLOGY_VERSION = 'ARWT Algorithm v1.0-rc5.1';
     const BUILD_VERSION = 'ARWT v1.0-rc5.1-validation.1';
-    const VALIDATION_ENDPOINT = 'PASTE_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+    const VALIDATION_ENDPOINT = '/api/validation';
 
     const QUESTIONS = {
       L: {
@@ -1642,7 +1642,7 @@
     }
 
     function validationEndpointConfigured() {
-      return /^https:\/\//.test(VALIDATION_ENDPOINT) && !VALIDATION_ENDPOINT.includes('PASTE_GOOGLE_APPS_SCRIPT');
+      return VALIDATION_ENDPOINT === '/api/validation';
     }
 
     function canSubmitValidationRecord(recordType, consent = state.validationConsent) {
@@ -1655,13 +1655,15 @@
     }
 
     async function transmitValidationEnvelope(envelope) {
-      await fetch(VALIDATION_ENDPOINT, {
+      const response = await fetch(VALIDATION_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(envelope),
-        mode: 'no-cors',
         keepalive: true
       });
+      if (!response.ok || (await response.json()).ok !== true) {
+        throw new Error('Validation submission failed.');
+      }
     }
 
     function notifyValidationFailure() {

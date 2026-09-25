@@ -8,6 +8,11 @@ Methodology and application build versions are tracked separately. Entries below
 - Added public documentation and issue templates.
 - Methodology remains `ARWT Algorithm v1.0-rc5.1`; validation schema remains `ARWT_VALIDATION_V1`. The application constant remains `ARWT v1.0-rc5.1-validation.1`; this entry identifies a copy/documentation revision, not a new algorithm.
 
+## Validation transport update (2026-09-25)
+
+- Routed optional validation submissions through a same-origin Netlify Function to the existing Google Apps Script receiver. The upstream URL is configured privately as `ARWT_VALIDATION_ENDPOINT` in Netlify.
+- Kept the frozen methodology, questions, result classification, consent rules, payload schema, and application version constant unchanged.
+
 ## ARWT v1.0-rc5.1-validation.1 (2026-09-23)
 
 - Separate validation build of the rc5.1 methodology. Adds optional, consent-gated session and milestone records, optional feedback and separate contact capture, EN/PL/RU validation UI, and Google Apps Script receiver for four sheets.

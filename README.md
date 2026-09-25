@@ -46,11 +46,11 @@ ARWT does not establish whether a particular AI model can perform the work, whet
 
 ## Status
 
-**Validation / experimental.** The frozen methodology is `ARWT Algorithm v1.0-rc5.1`; the instrumented client is `ARWT v1.0-rc5.1-validation.1`. The public-facing start-screen copy in this repository is a positioning edit; the methodology and validation schema remain unchanged. The public deployment may not match this commit until separately updated and verified.
+**Validation / experimental.** The frozen methodology is `ARWT Algorithm v1.0-rc5.1`; the instrumented client is `ARWT v1.0-rc5.1-validation.1`. The methodology and validation schema remain unchanged. Validation submissions use a same-origin Netlify Function, which forwards them to the existing Google Apps Script receiver when configured.
 
 ## Run locally
 
-Open `index.html` directly in a modern browser, or serve this directory with any static file server (for example, `python3 -m http.server 8000`). No build step, account, external library, or AI API is required. The repository version leaves `VALIDATION_ENDPOINT` as a placeholder, so no validation records are sent. You can run the assessment and see its result locally. To operate your own separate validation collection, read [README-VALIDATION-SETUP.md](README-VALIDATION-SETUP.md) and configure an endpoint you control. Never commit a live endpoint or Spreadsheet ID to this repository.
+Open `index.html` directly in a modern browser, or serve this directory with any static file server (for example, `python3 -m http.server 8000`). No build step, account, external library, or AI API is required to run the diagnostic. Validation submission requires Netlify Functions; a plain static server does not provide `/api/validation`. For a configured deployment, read [README-VALIDATION-SETUP.md](README-VALIDATION-SETUP.md). Never commit a live Apps Script URL or Spreadsheet ID to this repository.
 
 Current public application: [arwt.netlify.app](https://arwt.netlify.app/).
 
